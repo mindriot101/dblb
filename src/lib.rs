@@ -58,7 +58,7 @@ impl ManageConnection for LoadBalancer {
 pub struct BalancedConnection(Connection);
 
 impl BalancedConnection {
-    pub fn execute(&mut self, query: &str, params: ()) -> Result<(), Error> {
+    pub fn execute<T>(&mut self, query: &str, params: &[T]) -> Result<(), Error> {
         Ok(())
     }
 }

@@ -12,7 +12,10 @@ fn main() {
     let lb = LoadBalancer::new().add(m1).add(m2).add(m3).build().unwrap();
     let pool = r2d2::Pool::new(lb).unwrap();
 
-    let conn = pool.get().unwrap();
+    let mut conn = pool.get().unwrap();
 
-    conn.execute("drop table if exists foo", params![]).unwrap();
+    conn.execute::<i32>("drop table if exists foo", &[])
+        .unwrap();
+    conn.execute::<i32>("create table foo (id integer, value real)", &[])
+        .unwrap();
 }
