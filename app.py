@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import List, Any, Dict
 import databases
 import logging
@@ -15,29 +15,35 @@ class DatabaseCollection(object):
     Responds to HTTP methods to manage database backends, and maps directly to
     `encoding/databases` API
     """
+
     def __init__(self, *urls):
         self.urls = urls
         self.idx = 0
         self.database = None
 
     async def create(self):
+        """Connect to the database"""
         await self.connect()
 
     async def next(self):
+        """Switch to the next database backend"""
         self.idx = (self.idx + 1) % len(self.urls)
         await self.connect()
 
     async def connect(self):
+        """Connect to the current database"""
         if self.database is not None:
             await self.database.disconnect()
         self.database = databases.Database(self.urls[self.idx])
         await self.database.connect()
 
     async def disconnect(self):
+        """Disconnect from the current database"""
         if self.database is not None:
             await self.database.disconnect()
 
     async def fetch_all(self, *args, **kwargs):
+        """Perform a read only query for the database"""
         return await self.database.fetch_all(*args, **kwargs)
 
 
@@ -48,12 +54,21 @@ DBS = DatabaseCollection(
 
 
 class QueryRequest(BaseModel):
-    query: str
-    params: Dict[str, Any]
+    """Perform a query against the current database"""
+
+    query: str = Field(
+        ...,
+        title="SQL query",
+        description="SQL query to pass. Parameters are included with a `:` prefix.",
+    )
+    params: Dict[str, Any] = Field(
+        ..., title="SQL parameters", description="SQL parameters passed as a mapping"
+    )
 
 
 class QueryResponse(BaseModel):
-    result: List[Any]
+    """List of results from the database query"""
+    result: List[Dict[str, Any]]
 
 
 class SwitchResponse(BaseModel):
