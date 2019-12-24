@@ -1,6 +1,7 @@
 use r2d2::ManageConnection;
 use r2d2_sqlite::SqliteConnectionManager;
 use rusqlite::Connection;
+use std::borrow::Cow;
 
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
@@ -61,4 +62,11 @@ impl BalancedConnection {
     pub fn execute<T>(&mut self, query: &str, params: &[T]) -> Result<(), Error> {
         Ok(())
     }
+}
+
+#[derive(Clone)]
+pub enum SqlValue {}
+
+pub trait ToSql {
+    fn to_sql<'a>(&self) -> Result<Cow<'a, SqlValue>, Error>;
 }
